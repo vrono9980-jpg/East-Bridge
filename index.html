@@ -135,7 +135,7 @@
                 <div class="form-group">
                     <label>Select job title <span class="required">*</span></label>
                     <select id="jobTitleSelect" required>
-                        <option value="">-- Select a job --</option>
+                        <option value="">-- Loading jobs... --</option>
                     </select>
                     <small style="color:#64748b; font-size:0.7rem; display:block; margin-top:4px;">
                         <i class="fas fa-info-circle"></i> Choose any job from Qatar, Australia, or Lebanon
@@ -191,7 +191,6 @@
     // ============================================
     let allJobs = [];
     let jobsByCountry = {};
-    let jobsByTitle = {};
 
     // ============================================
     // LOAD JOBS FROM SUPABASE
@@ -199,13 +198,14 @@
     async function loadJobs() {
         const jobsGrid = document.getElementById('jobsGrid');
         const jobCount = document.getElementById('jobCount');
+        const jobTitleSelect = document.getElementById('jobTitleSelect');
         
         try {
             const { data, error } = await supabase
                 .from('job_listings')
                 .select('*')
                 .eq('active', true)
-                .order('created_at', { ascending: false });
+                .order('country', { ascending: true });
 
             if (error) throw error;
 
@@ -216,21 +216,17 @@
                 jobsGrid.innerHTML = `<div style="text-align:center; padding:2rem; grid-column:1/-1;">
                     <p>No jobs available at the moment. Check back soon!</p>
                 </div>`;
+                jobTitleSelect.innerHTML = `<option value="">-- No jobs available --</option>`;
                 return;
             }
 
-            // Group jobs by country and by title
+            // Group jobs by country
             jobsByCountry = {};
-            jobsByTitle = {};
             allJobs.forEach(job => {
-                // Group by country
                 if (!jobsByCountry[job.country]) {
                     jobsByCountry[job.country] = [];
                 }
                 jobsByCountry[job.country].push(job);
-                
-                // Group by job title (for quick lookup)
-                jobsByTitle[job.job_title] = job;
             });
 
             // Map country to flag
@@ -240,6 +236,7 @@
                 'Lebanon': '🇱🇧'
             };
 
+            // Render job cards
             let html = '';
             allJobs.forEach(job => {
                 const flag = countryFlags[job.country] || '🌍';
@@ -258,10 +255,14 @@
             });
             jobsGrid.innerHTML = html;
 
-            // Populate job title dropdown with ALL jobs
+            // ============================================
+            // POPULATE JOB TITLE DROPDOWN WITH ALL JOBS
+            // ============================================
             populateJobTitlesDropdown();
 
-            // Attach apply button handlers
+            // ============================================
+            // ATTACH APPLY BUTTON HANDLERS
+            // ============================================
             document.querySelectorAll('.apply-btn-card').forEach(btn => {
                 btn.addEventListener('click', function() {
                     const country = this.dataset.country;
@@ -292,7 +293,7 @@
     }
 
     // ============================================
-    // POPULATE JOB TITLES DROPDOWN (ALL JOBS)
+    // POPULATE JOB TITLES DROPDOWN
     // ============================================
     function populateJobTitlesDropdown() {
         const jobTitleSelect = document.getElementById('jobTitleSelect');
@@ -315,14 +316,14 @@
             return;
         }
 
-        // Group jobs by country for better organization in dropdown
+        // Country emojis
         const countryEmojis = {
             'Qatar': '🇶🇦',
             'Australia': '🇦🇺',
             'Lebanon': '🇱🇧'
         };
 
-        // Add optgroups for each country
+        // Add jobs grouped by country
         const countries = ['Qatar', 'Australia', 'Lebanon'];
         countries.forEach(country => {
             if (jobsByCountry[country] && jobsByCountry[country].length > 0) {
@@ -332,7 +333,11 @@
                 jobsByCountry[country].forEach(job => {
                     let opt = document.createElement('option');
                     opt.value = job.job_title;
-                    opt.textContent = `${job.job_title} ${job.salary_range ? '– ' + job.salary_range : ''}`;
+                    let label = job.job_title;
+                    if (job.salary_range) {
+                        label += ` – ${job.salary_range}`;
+                    }
+                    opt.textContent = label;
                     optGroup.appendChild(opt);
                 });
                 
@@ -348,13 +353,15 @@
         const selectedJobTitle = this.value;
         const countrySelect = document.getElementById('countrySelect');
         
-        if (selectedJobTitle && jobsByTitle[selectedJobTitle]) {
-            // Auto-fill country
-            const job = jobsByTitle[selectedJobTitle];
-            countrySelect.value = job.country;
-        } else {
-            // If no job selected, don't auto-fill country
-            // But keep the country selection as is
+        if (selectedJobTitle) {
+            // Find which country this job belongs to
+            for (const [country, jobs] of Object.entries(jobsByCountry)) {
+                const found = jobs.some(job => job.job_title === selectedJobTitle);
+                if (found) {
+                    countrySelect.value = country;
+                    break;
+                }
+            }
         }
     });
 
