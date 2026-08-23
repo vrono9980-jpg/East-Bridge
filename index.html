@@ -26,8 +26,9 @@
         .section-title { font-size: 1.8rem; font-weight: 700; margin: 2rem 0 1.5rem; position: relative; display: inline-block; }
         .section-title:after { content: ''; position: absolute; bottom: -8px; left: 0; width: 60%; height: 4px; background: #f5c542; border-radius: 4px; }
         .jobs-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 28px; margin: 30px 0 40px; }
-        .job-card { background: white; border-radius: 28px; padding: 1.5rem; box-shadow: 0 12px 30px rgba(0, 0, 0, 0.05); transition: all 0.25s ease; border: 1px solid #eef2ff; cursor: pointer; position: relative; }
+        .job-card { background: white; border-radius: 28px; padding: 1.5rem; box-shadow: 0 12px 30px rgba(0, 0, 0, 0.05); transition: all 0.25s ease; border: 2px solid #eef2ff; cursor: pointer; position: relative; }
         .job-card:hover { transform: translateY(-6px); box-shadow: 0 20px 35px rgba(0, 0, 0, 0.1); border-color: #f5c542; }
+        .job-card.selected { border-color: #0b2b26; background: #f0f9f4; }
         .job-card .click-hint { position: absolute; top: 12px; right: 16px; font-size: 0.7rem; color: #94a3b8; opacity: 0; transition: 0.2s; }
         .job-card:hover .click-hint { opacity: 1; }
         .country-tag { display: inline-block; background: #f1f5f9; padding: 4px 12px; border-radius: 30px; font-size: 0.75rem; font-weight: 600; margin-bottom: 12px; }
@@ -57,7 +58,8 @@
         .job-count { font-size: 0.8rem; color: #64748b; font-weight: normal; margin-left: 10px; }
         .selected-job-badge { background: #f5c542; color: #0b2b26; padding: 4px 14px; border-radius: 30px; font-weight: 600; font-size: 0.8rem; display: inline-block; margin-top: 5px; }
         .search-bar { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
-        .search-bar input { flex: 1; padding: 12px 16px; border-radius: 40px; border: 1px solid #cbd5e1; min-width: 200px; }
+        .search-bar input { flex: 1; padding: 12px 16px; border-radius: 40px; border: 1px solid #cbd5e1; min-width: 200px; font-size: 1rem; }
+        .search-bar input:focus { outline: none; border-color: #0b2b26; box-shadow: 0 0 0 3px rgba(11,43,38,0.1); }
         .filter-buttons { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
         .filter-btn { background: #f1f5f9; border: none; padding: 8px 20px; border-radius: 40px; font-weight: 600; cursor: pointer; transition: 0.2s; }
         .filter-btn:hover { background: #e2e8f0; }
@@ -108,10 +110,10 @@
     
     <!-- Search and Filter -->
     <div class="search-bar">
-        <input type="text" id="searchJobs" placeholder="🔍 Search jobs by title or country..." onkeyup="filterJobs()">
+        <input type="text" id="searchJobs" placeholder="🔍 Search jobs by title, country, or description..." onkeyup="filterJobs()">
     </div>
     <div class="filter-buttons" id="filterButtons">
-        <button class="filter-btn active" data-filter="all" onclick="filterJobs('all')">All Jobs</button>
+        <button class="filter-btn active" data-filter="all" onclick="filterJobs('all')">📋 All Jobs</button>
         <button class="filter-btn" data-filter="Qatar" onclick="filterJobs('Qatar')">🇶🇦 Qatar</button>
         <button class="filter-btn" data-filter="Australia" onclick="filterJobs('Australia')">🇦🇺 Australia</button>
         <button class="filter-btn" data-filter="Lebanon" onclick="filterJobs('Lebanon')">🇱🇧 Lebanon</button>
@@ -311,8 +313,9 @@
         let html = '';
         filteredJobs.forEach(job => {
             const flag = countryFlags[job.country] || '🌍';
+            const isSelected = selectedJob && selectedJob.title === job.job_title && selectedJob.country === job.country;
             html += `
-                <div class="job-card" onclick="selectJob('${escapeHtml(job.job_title)}', '${escapeHtml(job.country)}')">
+                <div class="job-card ${isSelected ? 'selected' : ''}" onclick="selectJob('${escapeHtml(job.job_title)}', '${escapeHtml(job.country)}')">
                     <span class="click-hint"><i class="fas fa-hand-pointer"></i> Click to apply</span>
                     <span class="country-tag"><i class="fas fa-map-marker-alt"></i> ${flag} ${job.country}</span>
                     <h3>${escapeHtml(job.job_title)}</h3>
@@ -386,16 +389,26 @@
     // SELECT JOB (from card or dropdown)
     // ============================================
     function selectJob(jobTitle, country) {
+        console.log('Selecting job:', jobTitle, country); // Debug log
+        
+        // Store selected job
         selectedJob = { title: jobTitle, country: country };
         
         // Update form fields
-        document.getElementById('jobTitleSelect').value = jobTitle;
-        document.getElementById('countrySelect').value = country;
+        const jobSelect = document.getElementById('jobTitleSelect');
+        const countrySelect = document.getElementById('countrySelect');
+        
+        jobSelect.value = jobTitle;
+        countrySelect.value = country;
         
         // Show selected job display
-        document.getElementById('selectedJobDisplay').style.display = 'block';
+        const display = document.getElementById('selectedJobDisplay');
+        display.style.display = 'block';
         document.getElementById('selectedJobTitle').textContent = jobTitle;
         document.getElementById('selectedJobCountry').textContent = `(${country})`;
+        
+        // Re-render cards to show selected state
+        renderJobCards();
         
         // Scroll to form
         document.getElementById('applyNow').scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -407,7 +420,7 @@
             formSection.style.boxShadow = '0 20px 35px -10px rgba(0,0,0,0.08)';
         }, 2000);
         
-        // Show success toast
+        // Show toast notification
         showToast(`✅ Selected: ${jobTitle} in ${country}`);
     }
 
@@ -416,6 +429,8 @@
         document.getElementById('selectedJobDisplay').style.display = 'none';
         document.getElementById('jobTitleSelect').value = '';
         document.getElementById('countrySelect').value = '';
+        renderJobCards();
+        showToast('🗑️ Job selection cleared');
     }
 
     // ============================================
@@ -437,6 +452,9 @@
                     document.getElementById('selectedJobDisplay').style.display = 'block';
                     document.getElementById('selectedJobTitle').textContent = selectedJobTitle;
                     document.getElementById('selectedJobCountry').textContent = `(${country})`;
+                    
+                    // Re-render cards
+                    renderJobCards();
                     break;
                 }
             }
@@ -460,10 +478,29 @@
     }
 
     // ============================================
-    // SEARCH JOBS
+    // SHOW TOAST NOTIFICATION
     // ============================================
-    function filterJobsSearch() {
-        renderJobCards();
+    function showToast(message) {
+        // Remove existing toasts
+        document.querySelectorAll('.custom-toast').forEach(el => el.remove());
+        
+        const toast = document.createElement('div');
+        toast.className = 'custom-toast';
+        toast.style.cssText = `
+            position: fixed; bottom: 20px; right: 20px; padding: 16px 24px;
+            border-radius: 40px; font-weight: 600; z-index: 1000;
+            background: #0b2b26; color: white;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+            animation: slideIn 0.3s ease;
+            max-width: 400px;
+        `;
+        toast.innerHTML = message;
+        document.body.appendChild(toast);
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transition = '0.3s';
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
     }
 
     // ============================================
@@ -584,25 +621,6 @@
         setTimeout(() => {
             alertMessage.style.display = 'none';
         }, 8000);
-    }
-
-    function showToast(message) {
-        const toast = document.createElement('div');
-        toast.style.cssText = `
-            position: fixed; bottom: 20px; right: 20px; padding: 16px 24px;
-            border-radius: 40px; font-weight: 600; z-index: 1000;
-            background: #dcfce7; color: #166534;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-            animation: slideIn 0.3s ease;
-            max-width: 400px;
-        `;
-        toast.innerHTML = message;
-        document.body.appendChild(toast);
-        setTimeout(() => {
-            toast.style.opacity = '0';
-            toast.style.transition = '0.3s';
-            setTimeout(() => toast.remove(), 300);
-        }, 3000);
     }
 
     function escapeHtml(str) {
