@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment | EastBridge Jobs</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #f0f9f4; color: #0f172a; }
+        .header { background: #0b2b26; color: white; padding: 1rem 0; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .container { max-width: 1000px; margin: 0 auto; padding: 0 24px; }
+        .header .container { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }
+        .logo { display: flex; align-items: center; gap: 12px; }
+        .logo i { font-size: 2rem; color: #f5c542; }
+        .logo h1 { font-size: 1.5rem; }
+        .nav-links a { color: #e2e8f0; margin-left: 28px; text-decoration: none; font-weight: 500; }
+        .nav-links a:hover, .nav-links a.active { color: #f5c542; }
+        .payment-card { background: white; border-radius: 32px; padding: 2rem; margin: 2rem 0; box-shadow: 0 20px 35px -10px rgba(0,0,0,0.1); }
+        .payment-number { background: #0b2b26; color: #f5c542; font-size: 2rem; font-weight: 800; text-align: center; padding: 1.2rem; border-radius: 28px; letter-spacing: 2px; margin: 1.5rem 0; }
+        .payment-number small { font-size: 0.8rem; display: block; color: #cbd5e1; font-weight: normal; }
+        .btn-mpesa { background: #00a859; color: white; border: none; padding: 16px 24px; font-weight: 800; border-radius: 60px; cursor: pointer; width: 100%; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; gap: 12px; margin: 1rem 0; transition: 0.2s; }
+        .btn-mpesa:hover { background: #008a4a; transform: scale(0.98); }
+        .btn-mpesa:disabled { opacity: 0.6; cursor: not-allowed; }
+        .instruction { background: #eef2ff; padding: 1.2rem; border-radius: 24px; margin: 1rem 0; }
+        .form-group { margin-bottom: 1.5rem; }
+        .form-group label { font-weight: 600; display: block; margin-bottom: 8px; }
+        .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 12px 16px; border-radius: 20px; border: 1px solid #cbd5e1; font-family: 'Inter', sans-serif; }
+        .btn-submit { background: #f5c542; color: #0b2b26; border: none; padding: 14px 24px; font-weight: 800; border-radius: 40px; cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; gap: 12px; font-size: 1rem; }
+        .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+        .alert { padding: 12px; border-radius: 24px; margin-bottom: 20px; display: none; }
+        .alert-success { background: #dcfce7; color: #166534; display: flex; }
+        .alert-error { background: #fee2e2; color: #991b1b; display: flex; }
+        footer { text-align: center; padding: 2rem; font-size: 0.8rem; color: #475569; margin-top: 1rem; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; }
+        .modal-content { background: white; border-radius: 32px; padding: 2rem; max-width: 400px; width: 90%; text-align: center; }
+        .modal-content input { width: 100%; padding: 12px; margin: 15px 0; border-radius: 40px; border: 1px solid #ccc; font-size: 1.2rem; text-align: center; letter-spacing: 4px; }
+        .modal-buttons { display: flex; gap: 12px; justify-content: center; }
+        .modal-buttons button { padding: 10px 20px; border-radius: 40px; border: none; cursor: pointer; font-weight: 600; }
+        .confirm-btn { background: #00a859; color: white; }
+        .cancel-btn { background: #e2e8f0; }
+        .loading-spinner { display: inline-block; width: 20px; height: 20px; border: 3px solid #f3f3f3; border-top: 3px solid #0b2b26; border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @media (max-width: 700px) { .payment-number { font-size: 1.3rem; } }
+    </style>
+</head>
+<body>
+<header class="header">
+    <div class="container">
+        <div class="logo"><i class="fas fa-hand-holding-usd"></i><h1>EastBridge Jobs</h1></div>
+        <div class="nav-links">
+            <a href="index.html"><i class="fas fa-home"></i> Home</a>
+            <a href="dashboard.html"><i class="fas fa-chart-line"></i> My Status</a>
+            <a href="employer.html"><i class="fas fa-users"></i> Employer</a>
+            <a href="payment.html" class="active"><i class="fas fa-credit-card"></i> Payment</a>
+            <a href="payment-admin.html"><i class="fas fa-shield-alt"></i> Payments Admin</a>
+        </div>
+    </div>
+</header>
+
+<div class="container">
+    <div class="payment-card">
+        <h2><i class="fas fa-coins"></i> Application Fee Payment</h2>
+        <p>Processing fee: <strong>KES 1,500</strong> – pay directly via M-Pesa.</p>
+        
+        <div class="payment-number">
+            <i class="fas fa-mobile-alt"></i> Pay to: <strong>0745709296</strong>
+            <small>Business Number (Paybill/Till)</small>
+        </div>
+
+        <button id="mpesaPayBtn" class="btn-mpesa"><i class="fas fa-bolt"></i> Pay KES 1,500 with M-Pesa</button>
+        
+        <div class="instruction">
+            <i class="fas fa-info-circle"></i> <strong>Manual payment alternative:</strong>
+            <ol style="margin-left: 1.5rem; margin-top: 8px;">
+                <li>Go to M-Pesa ➜ Lipa na M-Pesa ➜ Paybill (Business no: <strong>0745709296</strong>)</li>
+                <li>Account number: <strong>EASTBRIDGE</strong> + your phone number</li>
+                <li>Amount: <strong>KES 1,500</strong></li>
+                <li>Enter your M-Pesa PIN to complete.</li>
+                <li>After payment, fill the confirmation form below.</li>
+            </ol>
+        </div>
+
+        <h3>Confirm your payment (after sending)</h3>
+        <div id="paymentAlert" class="alert"></div>
+        <form id="paymentForm">
+            <div class="form-group">
+                <label>Full name (as on application)</label>
+                <input type="text" id="payerName" placeholder="e.g. Mercy Achieng" required>
+            </div>
+            <div class="form-group">
+                <label>M-Pesa transaction code</label>
+                <input type="text" id="transCode" placeholder="e.g. QWERTY123" required>
+            </div>
+            <div class="form-group">
+                <label>Phone number used for payment</label>
+                <input type="tel" id="payerPhone" placeholder="0745XXXXXX" required>
+            </div>
+            <div class="form-group">
+                <label>Amount paid (KES)</label>
+                <input type="number" id="amount" value="1500" readonly style="background:#f1f5f9;">
+            </div>
+            <button type="submit" class="btn-submit" id="paymentSubmitBtn"><i class="fas fa-check-circle"></i> Submit Payment Confirmation</button>
+        </form>
+        <p style="margin-top: 1rem; font-size: 0.75rem; color:#64748b;"><i class="fas fa-lock"></i> Your payment is securely stored in Supabase. The recruiter will verify within 24 hours.</p>
+    </div>
+</div>
+
+<!-- M-Pesa PIN Modal -->
+<div id="mpesaModal" class="modal">
+    <div class="modal-content">
+        <i class="fas fa-credit-card" style="font-size: 3rem; color:#00a859;"></i>
+        <h3>M-Pesa STK Push</h3>
+        <p>You will receive a prompt on your phone.<br>Enter your M-Pesa PIN to complete payment of <strong>KES 1,500</strong> to <strong>0745709296</strong>.</p>
+        <input type="password" id="mpesaPin" placeholder="Enter M-Pesa PIN" maxlength="4" pattern="\d*" inputmode="numeric">
+        <div class="modal-buttons">
+            <button class="cancel-btn" id="closeModalBtn">Cancel</button>
+            <button class="confirm-btn" id="confirmPinBtn">Confirm Payment</button>
+        </div>
+        <p style="font-size: 0.7rem; margin-top: 12px;">Demo simulation – no actual money is deducted. Use your real M-Pesa app to send money manually.</p>
+    </div>
+</div>
+
+<footer><p>EastBridge Jobs – secure payment verification. Official number: 0745709296. Powered by Supabase.</p></footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+    // ============================================
+    // SUPABASE CONFIGURATION
+    // ============================================
+    const SUPABASE_URL = 'https://aynzlevzajumfvlubxyg.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_jjHdEPMij6nkXShaOck-2A_xR8p36ZE';
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const modal = document.getElementById('mpesaModal');
+    const mpesaPayBtn = document.getElementById('mpesaPayBtn');
+    const closeModalBtn = document.getElementById('closeModalBtn');
+    const confirmPinBtn = document.getElementById('confirmPinBtn');
+    const pinInput = document.getElementById('mpesaPin');
+    const paymentForm = document.getElementById('paymentForm');
+    const alertDiv = document.getElementById('paymentAlert');
+    const paymentSubmitBtn = document.getElementById('paymentSubmitBtn');
+
+    // Show modal on "Pay with M-Pesa" click
+    mpesaPayBtn.addEventListener('click', () => {
+        modal.style.display = 'flex';
+        pinInput.value = '';
+    });
+
+    closeModalBtn.addEventListener('click', () => {
+        modal.style.display = 'none';
+    });
+
+    confirmPinBtn.addEventListener('click', async () => {
+        let pin = pinInput.value.trim();
+        if (!pin || pin.length < 4) {
+            showAlert('Please enter a 4-digit M-Pesa PIN (demo)', 'error');
+            return;
+        }
+
+        // Simulate payment processing
+        confirmPinBtn.disabled = true;
+        confirmPinBtn.innerHTML = '<span class="loading-spinner"></span> Processing...';
+
+        setTimeout(() => {
+            const fakeTransaction = 'MPESA' + Math.floor(Math.random() * 1000000000);
+            modal.style.display = 'none';
+            showAlert(`✅ M-Pesa payment initiated! Transaction code: ${fakeTransaction}<br>Check your phone for confirmation. After receiving SMS, click "Submit Payment Confirmation" below.`, 'success');
+            document.getElementById('transCode').value = fakeTransaction;
+            confirmPinBtn.disabled = false;
+            confirmPinBtn.innerHTML = 'Confirm Payment';
+        }, 2000);
+    });
+
+    // Handle payment confirmation form submission
+    paymentForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const name = document.getElementById('payerName').value.trim();
+        const code = document.getElementById('transCode').value.trim();
+        const phone = document.getElementById('payerPhone').value.trim();
+        const amount = document.getElementById('amount').value;
+
+        if (!name || !code || !phone) {
+            showAlert('Please fill all fields.', 'error');
+            return;
+        }
+
+        paymentSubmitBtn.disabled = true;
+        paymentSubmitBtn.innerHTML = '<span class="loading-spinner"></span> Submitting...';
+
+        try {
+            // Insert payment into Supabase
+            const { data, error } = await supabase
+                .from('payments')
+                .insert([{
+                    full_name: name,
+                    phone: phone,
+                    transaction_code: code,
+                    amount: parseInt(amount),
+                    status: 'pending_verification'
+                }])
+                .select();
+
+            if (error) throw error;
+
+            // Also save to localStorage as backup
+            let payments = localStorage.getItem('eastbridge_payments');
+            let paymentList = payments ? JSON.parse(payments) : [];
+            paymentList.push({
+                name: name,
+                transactionCode: code,
+                phone: phone,
+                amount: parseInt(amount),
+                timestamp: new Date().toISOString(),
+                status: 'pending_verification'
+            });
+            localStorage.setItem('eastbridge_payments', JSON.stringify(paymentList));
+
+            showAlert('✅ Payment confirmation received! We will verify and activate your application within 24hrs.', 'success');
+            paymentForm.reset();
+
+        } catch (error) {
+            console.error('Payment submission error:', error);
+            showAlert('❌ Failed to submit payment. Please try again.', 'error');
+        } finally {
+            paymentSubmitBtn.disabled = false;
+            paymentSubmitBtn.innerHTML = '<i class="fas fa-check-circle"></i> Submit Payment Confirmation';
+        }
+    });
+
+    function showAlert(message, type) {
+        alertDiv.className = `alert alert-${type}`;
+        alertDiv.innerHTML = message;
+        alertDiv.style.display = 'flex';
+        setTimeout(() => {
+            alertDiv.style.display = 'none';
+        }, 8000);
+    }
+
+    // Click outside modal to close
+    window.addEventListener('click', (e) => {
+        if (e.target === modal) modal.style.display = 'none';
+    });
+</script>
+</body>
+</html>

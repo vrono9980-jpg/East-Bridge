@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Applications | EastBridge Jobs</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #f1f5f9; color: #0f172a; }
+        .header { background: #0b2b26; color: white; padding: 1rem 0; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+        .header .container { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }
+        .logo { display: flex; align-items: center; gap: 12px; }
+        .logo i { font-size: 2rem; color: #f5c542; }
+        .logo h1 { font-size: 1.5rem; }
+        .nav-links a { color: #e2e8f0; margin-left: 28px; text-decoration: none; font-weight: 500; }
+        .nav-links a:hover, .nav-links a.active { color: #f5c542; }
+        .hero-mini { background: white; padding: 2rem 0; border-bottom: 1px solid #e2e8f0; }
+        .hero-mini h2 { font-size: 1.8rem; font-weight: 700; }
+        .card { background: white; border-radius: 28px; padding: 1.5rem; margin: 2rem 0; box-shadow: 0 8px 20px rgba(0,0,0,0.05); }
+        .search-box { display: flex; gap: 12px; margin-bottom: 1.5rem; flex-wrap: wrap; }
+        .search-box input { flex: 1; padding: 12px 16px; border-radius: 40px; border: 1px solid #cbd5e1; min-width: 200px; }
+        .search-box button { background: #0b2b26; color: white; border: none; padding: 12px 24px; border-radius: 40px; cursor: pointer; font-weight: 600; }
+        .app-list { display: flex; flex-direction: column; gap: 1rem; }
+        .app-item { border-left: 4px solid #f5c542; background: #fefce8; padding: 1rem 1.5rem; border-radius: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }
+        .app-info h4 { font-weight: 700; }
+        .status { padding: 6px 14px; border-radius: 40px; font-size: 0.8rem; font-weight: 600; }
+        .status-pending { background: #fef3c7; color: #92400e; }
+        .status-approved { background: #dcfce7; color: #166534; }
+        .status-rejected { background: #fee2e2; color: #991b1b; }
+        .empty-state { text-align: center; padding: 3rem; color: #475569; }
+        .btn-back { background: #0b2b26; color: white; padding: 10px 20px; border-radius: 40px; text-decoration: none; display: inline-block; margin-top: 1rem; }
+        footer { text-align: center; padding: 2rem; font-size: 0.8rem; color: #475569; }
+        .loading-spinner { display: inline-block; width: 20px; height: 20px; border: 3px solid #f3f3f3; border-top: 3px solid #0b2b26; border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @media (max-width: 700px) { .app-item { flex-direction: column; align-items: flex-start; gap: 8px; } }
+    </style>
+</head>
+<body>
+<header class="header">
+    <div class="container">
+        <div class="logo"><i class="fas fa-briefcase"></i><h1>EastBridge Jobs</h1></div>
+        <div class="nav-links">
+            <a href="index.html"><i class="fas fa-home"></i> Home</a>
+            <a href="dashboard.html" class="active"><i class="fas fa-chart-line"></i> My Status</a>
+            <a href="employer.html"><i class="fas fa-users"></i> Employer</a>
+            <a href="payment.html"><i class="fas fa-credit-card"></i> Payment</a>
+            <a href="payment-admin.html"><i class="fas fa-shield-alt"></i> Payments Admin</a>
+        </div>
+    </div>
+</header>
+
+<section class="hero-mini">
+    <div class="container">
+        <h2><i class="fas fa-clipboard-list"></i> Your job applications</h2>
+        <p>Track your submissions for Qatar, Australia, and Lebanon opportunities.</p>
+    </div>
+</section>
+
+<div class="container">
+    <div class="card">
+        <h3><i class="fas fa-search"></i> Find your applications</h3>
+        <div class="search-box">
+            <input type="email" id="emailSearch" placeholder="Enter your email address" value="">
+            <button id="searchBtn"><i class="fas fa-search"></i> Search</button>
+        </div>
+        <div id="applicationsContainer" class="app-list">
+            <div class="empty-state">
+                <i class="fas fa-inbox" style="font-size: 3rem; opacity: 0.5;"></i>
+                <p>Enter your email above to see your applications.</p>
+            </div>
+        </div>
+        <div style="margin-top: 24px; text-align: center;">
+            <a href="index.html" class="btn-back"><i class="fas fa-arrow-left"></i> Back to Jobs</a>
+        </div>
+    </div>
+</div>
+
+<footer><p>EastBridge Jobs — connecting East Africa to global careers. Powered by Supabase.</p></footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+    // ============================================
+    // SUPABASE CONFIGURATION
+    // ============================================
+    const SUPABASE_URL = 'https://aynzlevzajumfvlubxyg.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_jjHdEPMij6nkXShaOck-2A_xR8p36ZE';
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const emailSearch = document.getElementById('emailSearch');
+    const searchBtn = document.getElementById('searchBtn');
+    const container = document.getElementById('applicationsContainer');
+
+    // Try to get email from localStorage
+    const storedEmail = localStorage.getItem('eastbridge_email');
+    if (storedEmail) {
+        emailSearch.value = storedEmail;
+        searchApplications(storedEmail);
+    }
+
+    searchBtn.addEventListener('click', () => {
+        const email = emailSearch.value.trim();
+        if (email) {
+            localStorage.setItem('eastbridge_email', email);
+            searchApplications(email);
+        } else {
+            container.innerHTML = `<div class="empty-state"><p>Please enter your email address.</p></div>`;
+        }
+    });
+
+    emailSearch.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') searchBtn.click();
+    });
+
+    async function searchApplications(email) {
+        container.innerHTML = `<div style="text-align:center; padding:2rem;"><div class="loading-spinner"></div><p>Loading your applications...</p></div>`;
+
+        try {
+            const { data, error } = await supabase
+                .from('applications')
+                .select('*')
+                .eq('email', email)
+                .order('created_at', { ascending: false });
+
+            if (error) throw error;
+
+            if (!data || data.length === 0) {
+                container.innerHTML = `<div class="empty-state">
+                    <i class="fas fa-file-alt" style="font-size: 2.5rem; opacity:0.5;"></i>
+                    <p>No applications found for ${email}.</p>
+                    <p><a href="index.html" style="color:#0b2b26; font-weight:600;">← Browse jobs & apply</a></p>
+                </div>`;
+                return;
+            }
+
+            let html = '';
+            data.forEach(app => {
+                const date = new Date(app.created_at).toLocaleString();
+                const statusMap = {
+                    'pending': 'Pending Review',
+                    'approved': 'Approved 🎉',
+                    'rejected': 'Not Selected'
+                };
+                const statusClass = {
+                    'pending': 'status-pending',
+                    'approved': 'status-approved',
+                    'rejected': 'status-rejected'
+                };
+                const statusText = statusMap[app.status] || app.status;
+                const statusCls = statusClass[app.status] || 'status-pending';
+
+                html += `
+                    <div class="app-item">
+                        <div class="app-info">
+                            <h4>${escapeHtml(app.job_title)}</h4>
+                            <p><i class="fas fa-map-marker-alt"></i> ${escapeHtml(app.preferred_country)} · <i class="fas fa-user"></i> ${escapeHtml(app.full_name)} (${escapeHtml(app.nationality)})</p>
+                            <small><i class="far fa-calendar-alt"></i> ${date}</small>
+                            ${app.cv_url ? `<br><small><i class="fas fa-paperclip"></i> <a href="${app.cv_url}" target="_blank">View CV</a></small>` : ''}
+                        </div>
+                        <div>
+                            <span class="status ${statusCls}"><i class="fas fa-clock"></i> ${statusText}</span>
+                            <p style="margin-top:5px; font-size:0.75rem;">We'll contact you via email</p>
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+
+        } catch (error) {
+            console.error('Error fetching applications:', error);
+            container.innerHTML = `<div class="empty-state"><p>❌ Failed to load applications. Please try again.</p></div>`;
+        }
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    }
+</script>
+</body>
+</html>
