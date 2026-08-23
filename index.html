@@ -52,6 +52,7 @@
         .loading-spinner { display: inline-block; width: 20px; height: 20px; border: 3px solid #f3f3f3; border-top: 3px solid #0b2b26; border-radius: 50%; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .job-count { font-size: 0.8rem; color: #64748b; font-weight: normal; margin-left: 10px; }
+        .job-title-suffix { font-size: 0.7rem; color: #64748b; }
         @media (max-width: 760px) {
             .form-grid { grid-template-columns: 1fr; }
             .full-width { grid-column: span 1; }
@@ -132,6 +133,15 @@
                     </select>
                 </div>
                 <div class="form-group">
+                    <label>Select job title <span class="required">*</span></label>
+                    <select id="jobTitleSelect" required>
+                        <option value="">-- Select a job --</option>
+                    </select>
+                    <small style="color:#64748b; font-size:0.7rem; display:block; margin-top:4px;">
+                        <i class="fas fa-info-circle"></i> Choose any job from Qatar, Australia, or Lebanon
+                    </small>
+                </div>
+                <div class="form-group">
                     <label>Preferred country <span class="required">*</span></label>
                     <select id="countrySelect" required>
                         <option value="">Select country</option>
@@ -139,14 +149,8 @@
                         <option value="Australia">🇦🇺 Australia</option>
                         <option value="Lebanon">🇱🇧 Lebanon</option>
                     </select>
-                </div>
-                <div class="form-group">
-                    <label>Select job title <span class="required">*</span></label>
-                    <select id="jobTitleSelect" required>
-                        <option value="">-- Select country first --</option>
-                    </select>
                     <small style="color:#64748b; font-size:0.7rem; display:block; margin-top:4px;">
-                        <i class="fas fa-info-circle"></i> Jobs will appear after selecting a country
+                        <i class="fas fa-info-circle"></i> Auto-selected when you choose a job
                     </small>
                 </div>
                 <div class="form-group full-width">
@@ -187,6 +191,7 @@
     // ============================================
     let allJobs = [];
     let jobsByCountry = {};
+    let jobsByTitle = {};
 
     // ============================================
     // LOAD JOBS FROM SUPABASE
@@ -214,13 +219,18 @@
                 return;
             }
 
-            // Group jobs by country for the dropdown
+            // Group jobs by country and by title
             jobsByCountry = {};
+            jobsByTitle = {};
             allJobs.forEach(job => {
+                // Group by country
                 if (!jobsByCountry[job.country]) {
                     jobsByCountry[job.country] = [];
                 }
                 jobsByCountry[job.country].push(job);
+                
+                // Group by job title (for quick lookup)
+                jobsByTitle[job.job_title] = job;
             });
 
             // Map country to flag
@@ -248,28 +258,27 @@
             });
             jobsGrid.innerHTML = html;
 
+            // Populate job title dropdown with ALL jobs
+            populateJobTitlesDropdown();
+
             // Attach apply button handlers
             document.querySelectorAll('.apply-btn-card').forEach(btn => {
                 btn.addEventListener('click', function() {
                     const country = this.dataset.country;
                     const job = this.dataset.job;
                     if (country && job) {
+                        // Set country
                         document.getElementById('countrySelect').value = country;
-                        document.getElementById('countrySelect').dispatchEvent(new Event('change'));
+                        // Set job title
+                        document.getElementById('jobTitleSelect').value = job;
+                        // Scroll to form
+                        document.getElementById('applyNow').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        // Highlight the form
+                        const formSection = document.querySelector('.form-section');
+                        formSection.style.boxShadow = '0 0 0 3px #f5c542, 0 20px 35px -10px rgba(0,0,0,0.08)';
                         setTimeout(() => {
-                            let options = Array.from(document.getElementById('jobTitleSelect').options);
-                            let target = options.find(opt => opt.value === job);
-                            if (target) {
-                                document.getElementById('jobTitleSelect').value = job;
-                            }
-                            document.getElementById('applyNow').scrollIntoView({ behavior: 'smooth', block: 'start' });
-                            // Highlight the form
-                            const formSection = document.querySelector('.form-section');
-                            formSection.style.boxShadow = '0 0 0 3px #f5c542, 0 20px 35px -10px rgba(0,0,0,0.08)';
-                            setTimeout(() => {
-                                formSection.style.boxShadow = '0 20px 35px -10px rgba(0,0,0,0.08)';
-                            }, 2000);
-                        }, 100);
+                            formSection.style.boxShadow = '0 20px 35px -10px rgba(0,0,0,0.08)';
+                        }, 2000);
                     }
                 });
             });
@@ -283,15 +292,13 @@
     }
 
     // ============================================
-    // JOB TITLE DYNAMIC POPULATION (from Supabase)
+    // POPULATE JOB TITLES DROPDOWN (ALL JOBS)
     // ============================================
-    const countrySelect = document.getElementById('countrySelect');
-    const jobTitleSelect = document.getElementById('jobTitleSelect');
-
-    function populateJobTitles(selectedCountry) {
+    function populateJobTitlesDropdown() {
+        const jobTitleSelect = document.getElementById('jobTitleSelect');
         jobTitleSelect.innerHTML = '';
         
-        // Add placeholder option
+        // Add placeholder
         let defaultOpt = document.createElement('option');
         defaultOpt.value = '';
         defaultOpt.textContent = '-- Select a job --';
@@ -299,48 +306,57 @@
         defaultOpt.selected = true;
         jobTitleSelect.appendChild(defaultOpt);
 
-        if (!selectedCountry || !jobsByCountry[selectedCountry]) {
-            // No jobs for this country
+        if (!allJobs || allJobs.length === 0) {
             let noJobsOpt = document.createElement('option');
             noJobsOpt.value = '';
-            noJobsOpt.textContent = 'No jobs available for this country';
+            noJobsOpt.textContent = 'No jobs available';
             noJobsOpt.disabled = true;
             jobTitleSelect.appendChild(noJobsOpt);
             return;
         }
 
-        // Add jobs for the selected country
-        const jobs = jobsByCountry[selectedCountry];
-        jobs.forEach(job => {
-            let opt = document.createElement('option');
-            opt.value = job.job_title;
-            opt.textContent = `${job.job_title} ${job.salary_range ? '– ' + job.salary_range : ''}`;
-            jobTitleSelect.appendChild(opt);
+        // Group jobs by country for better organization in dropdown
+        const countryEmojis = {
+            'Qatar': '🇶🇦',
+            'Australia': '🇦🇺',
+            'Lebanon': '🇱🇧'
+        };
+
+        // Add optgroups for each country
+        const countries = ['Qatar', 'Australia', 'Lebanon'];
+        countries.forEach(country => {
+            if (jobsByCountry[country] && jobsByCountry[country].length > 0) {
+                const optGroup = document.createElement('optgroup');
+                optGroup.label = `${countryEmojis[country] || '🌍'} ${country}`;
+                
+                jobsByCountry[country].forEach(job => {
+                    let opt = document.createElement('option');
+                    opt.value = job.job_title;
+                    opt.textContent = `${job.job_title} ${job.salary_range ? '– ' + job.salary_range : ''}`;
+                    optGroup.appendChild(opt);
+                });
+                
+                jobTitleSelect.appendChild(optGroup);
+            }
         });
     }
 
-    // Initial population
-    countrySelect.addEventListener('change', (e) => {
-        const selectedCountry = e.target.value;
-        if (selectedCountry) {
-            populateJobTitles(selectedCountry);
+    // ============================================
+    // AUTO-FILL COUNTRY WHEN JOB IS SELECTED
+    // ============================================
+    document.getElementById('jobTitleSelect').addEventListener('change', function() {
+        const selectedJobTitle = this.value;
+        const countrySelect = document.getElementById('countrySelect');
+        
+        if (selectedJobTitle && jobsByTitle[selectedJobTitle]) {
+            // Auto-fill country
+            const job = jobsByTitle[selectedJobTitle];
+            countrySelect.value = job.country;
         } else {
-            jobTitleSelect.innerHTML = '';
-            let opt = document.createElement('option');
-            opt.value = '';
-            opt.textContent = '-- Select country first --';
-            opt.disabled = true;
-            opt.selected = true;
-            jobTitleSelect.appendChild(opt);
+            // If no job selected, don't auto-fill country
+            // But keep the country selection as is
         }
     });
-
-    // Trigger initial change to populate jobs for default country
-    setTimeout(() => {
-        if (countrySelect.value) {
-            countrySelect.dispatchEvent(new Event('change'));
-        }
-    }, 500);
 
     // ============================================
     // FORM SUBMISSION TO SUPABASE
@@ -423,9 +439,7 @@
             document.getElementById('cvFile').value = '';
             
             // Reset job title dropdown
-            if (countrySelect.value) {
-                populateJobTitles(countrySelect.value);
-            }
+            populateJobTitlesDropdown();
             
             // Save to localStorage as backup
             let existing = localStorage.getItem('eastbridge_applications');
@@ -457,7 +471,6 @@
         alertMessage.className = `alert alert-${type}`;
         alertMessage.innerHTML = message;
         alertMessage.style.display = 'flex';
-        // Scroll to alert
         alertMessage.scrollIntoView({ behavior: 'smooth', block: 'center' });
         setTimeout(() => {
             alertMessage.style.display = 'none';
